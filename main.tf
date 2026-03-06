@@ -62,32 +62,38 @@ resource "konnect_event_gateway_virtual_cluster" "quickstart_virtual_cluster" {
   dns_label           = var.keg_virt_dns_label
 
   namespace = merge(
-    var.keg_virt_namespace
-  )
-
-  namespace = {
-    additional = {
-      consumer_groups = [
-        {
-          glob = {
-            glob = "...my_glob..."
-          }
-        }
-      ]
-      topics = [
-        {
-          exact_list = {
-            conflict = "warn"
-            exact_list = [
-              {
-                backend = "...my_backend..."
-              }
-            ]
-          }
-        }
-      ]
+    var.keg_virt_namespace,
+    {
+      additional: {
+        topics: concat(
+          length(var.keg_virt_namespace_additional_topics.exact) > 0 ? [{
+            exact_list = {
+              conflict   = var.keg_virt_namespace_additional_topics.exact_conflict,
+              exact_list = var.keg_virt_namespace_additional_topics.exact
+            }
+          }] : [],
+          length(var.keg_virt_namespace_additional_topics.glob) > 0 ? [{
+            glob = {
+              conflict   = var.keg_virt_namespace_additional_topics.glob_conflict,
+              glob = var.keg_virt_namespace_additional_topics.glob
+            }
+          }] : []
+        ),
+        consumer_groups: concat(
+          length(var.keg_virt_namespace_additional_consumer_groups.exact) > 0 ? [{
+            exact_list = {
+              exact_list = var.keg_virt_namespace_additional_consumer_groups.exact
+            }
+          }] : [],
+          length(var.keg_virt_namespace_additional_consumer_groups.glob) > 0 ? [{
+            glob = {
+              glob = var.keg_virt_namespace_additional_consumer_groups.glob
+            }
+          }] : []
+        )
+      }
     }
-  }
+  )
 }
 
 resource "konnect_event_gateway_cluster_policy_acls" "my_eventgatewayclusterpolicyacls" {

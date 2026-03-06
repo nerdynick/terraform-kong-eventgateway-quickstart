@@ -193,3 +193,39 @@ variable "keg_virt_namespace" {
         error_message = "Namespace Mode must be one of `hide_prefix` or `enforce_prefix` and Prefix must not be null"
     }
 }
+
+variable "keg_virt_namespace_additional_topics" {
+    type = object({
+      exact = list(string)
+      glob  = list(string)
+      exact_conflict = string
+      glob_conflict  = string
+    })
+    default = {
+        exact_conflict: "warn",
+        glob_conflict:  "warn",
+        exact: [],
+        glob:  []
+    }
+    validation {
+      condition = (
+        (
+            var.keg_virt_namespace_additional_topics.exact_conflict == "warn" || 
+            var.keg_virt_namespace_additional_topics.exact_conflict == "ignore"
+        ) && (
+            var.keg_virt_namespace_additional_topics.glob_conflict == "warn" || 
+            var.keg_virt_namespace_additional_topics.glob_conflict == "ignore"
+        )
+      )
+      error_message = "exact_conflict and glob_conflict must be either `warn` or `ignore`"
+    }
+    description = "Topics that should be included regardless of if they meet the namespace match"
+}
+variable "keg_virt_namespace_additional_consumer_groups" {
+    type = object({
+      exact = list(string)
+      glob  = list(string)
+    })
+    default = {exact: [], glob:  []}
+    description = "Consumer Groups that should be included regardless of if they meet the namespace match"
+}
